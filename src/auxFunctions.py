@@ -1,13 +1,31 @@
 import numpy as np
-from yuv420 import readYUV420Range
-from rgb2yuv_yuv2rgb import YUV2RGB
+from src.yuv420 import readYUV420Range
+from src.rgb2yuv_yuv2rgb import YUV2RGB
 from skimage.util import view_as_windows
 import scipy
 
-def readFrames(inputVideo: str, resolution: tuple, t: int, numFrames: int):
+def readFrames(vidName: str, resolution: tuple, t: int, numFrames: int):
     """
     Returns a selected tuple of frames from a YUV420 video, as RGB arrays
+
+    Parameters
+    ----------
+    vidName : str
+        the video file name NB - should be located in dataset folder
+    resolution : tuple
+        The video resolution should be of even numbers
+    step : integer or tuple of length arr_in.ndim
+        Indicates the frame number of the selected frame to be processed
+    numFrames : integer 
+        Indicates the number of frames in the video
+
+    Returns
+    -------
+    RGBarr_tmin1,RGBarr_t,RGBarr_tplus1 : tuple of ndarray
+        RGB arrays of the input frames
+
     """
+    inputVideo = 'dataset/' + vidName
 
     if t == 0:
         Yarr, Uarr, Varr = readYUV420Range(inputVideo,resolution, (t,t), upsampleUV=True)
@@ -88,6 +106,24 @@ def image_preprocess(image):
     return image
 
 def deconstruct(arr, patchSize=192):
+    """
+    Returns a set of overlapping patches for a frame. The patches are selected
+    by padding the original size of the array
+
+    Parameters
+    ----------
+    arr : ndarray
+        the input array
+    patchSize : int
+        By default, the patchSize is 192.
+
+
+    Returns
+    -------
+    arr : ndarray
+        Rolling (windowed) view of the input array of N * patchSize * patchSize * 3
+
+    """
     inputHeight, inputWidth = arr.shape[0], arr.shape[1]
 
     #PAD HEIGHT AND WIDTH TO MULTIPLE OF PATCHSIZE
@@ -109,6 +145,28 @@ def deconstruct(arr, patchSize=192):
     return arr
 
 def reconstruct(arr_actual, arr, patchSize=192, windowType='barthann'):
+    """
+    Returns a reconstructed frame after processing the patches from a frame. The padding applied
+    by the deconstruct function are removed during reconstruction
+
+    Parameters
+    ----------
+    arr_actual : ndarray
+        the input array
+    arr : ndarray
+        an array of exact shape as arr. I used this for easy implementation but will change later on
+    patchSize : int
+        By default, the patchSize is 192.
+    windowType : str
+        By default, the windowType is set to barthann.
+
+
+    Returns
+    -------
+    outputArr : ndarray
+        The array of a reconstructed frame
+
+    """
     inputHeight, inputWidth = arr.shape[0], arr.shape[1]
 
     #PAD HEIGHT AND WIDTH TO MULTIPLE OF PATCHSIZE
