@@ -29,8 +29,8 @@ class hrNetVideo:
         inputPatches = tf.convert_to_tensor(inputPatches)
 
         outputPatches = np.empty((1,numPatches,192,192,3))
-        for frame in range(numPatches):
-            outputPatches[:,frame,:,:,:] = artifactReductionModel(inputPatches[:,frame,:,:,:],training=False)
+        for patch in range(numPatches):
+            outputPatches[:,patch,:,:,:] = artifactReductionModel(inputPatches[:,patch,:,:,:],training=False)
 
         outputFrame = reconstruct(outputPatches[0],frame_t,192)
 
