@@ -1,5 +1,5 @@
 from src.auxFunctions import readFrames, deconstruct, reconstruct
-from src.rgb2yuv_yuv2rgb import YUV2RGB
+from src.rgb2yuv_yuv2rgb import RGB2YUV
 from src.yuv420 import writeYUV420
 import numpy as np
 import tensorflow as tf
@@ -36,7 +36,6 @@ class hrNetVideo:
 
         return outputFrame
 
-    # NB: Hasn't been tested yet, so don't run
     def restore_video(self):
 
         artifactReductionModel = hrNet(2, [32, 64, 128, 256], 5).model()
@@ -64,13 +63,10 @@ class hrNetVideo:
             for patch in range(numPatches):
                 outputPatches[:,patch,:,:,:] = artifactReductionModel(inputPatches[:,patch,:,:,:],training=False)
 
-            # Not sure if saving the YUV video works yet, to be tested later
-
             outputFrame = reconstruct(outputPatches[0],frame_t,192)
-            #print(outputFrame.shape)
             restoredFrames[frame,:,:,:] = outputFrame[:,:,:]
 
-            outputFrameYUV = YUV2RGB(outputFrame)
+            outputFrameYUV = RGB2YUV(outputFrame)
 
             Yout = outputFrameYUV[:,:,0]
             Uout = outputFrameYUV[:,:,1]
