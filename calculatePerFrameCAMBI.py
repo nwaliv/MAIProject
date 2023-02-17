@@ -17,8 +17,8 @@ cambiScore = []
 df = pd.read_csv("trainVideoSet.csv")
 
 for index in range(df.shape[0]):
-    refFile = file + df["Ref"][index]
-    compFile = file + df["Comp"][index]
+    refFile = pathRef + df["Ref"][index]
+    compFile = pathComp + df["Comp"][index]
     resolution = str(df["Width"][index])+"x"+str(df["Height"][index])
     command = f"""ffmpeg -s {resolution} -i {refFile} -s {resolution} -i {compFile} -lavfi libvmaf="feature='name=psnr|name=float_ssim|name=cambi':log_fmt=json:log_path=output.json" -f null -"""
     runCommand(command)

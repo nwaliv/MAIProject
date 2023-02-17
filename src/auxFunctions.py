@@ -1,7 +1,7 @@
 import numpy as np
 from src.yuv420 import readYUV420Range
 from src.rgb2yuv_yuv2rgb import YUV2RGB
-from skimage.util import view_as_windows
+from skimage.util import view_as_windows, view_as_blocks
 import scipy
 
 def readFrames(vidName: str, resolution: tuple, t: int, numFrames: int):
@@ -104,6 +104,46 @@ def image_preprocess(image):
     center = 1.0
     image = image / factor - center  # [0.0 ~ 255.0] -> [-1.0 ~ 1.0]
     return image
+
+def createPatches(arr, patchSize=192):
+    """
+    Returns a set of non-overlapping patches for a frame. The patches are selected
+    by padding the original size of the array
+
+    Parameters
+    ----------
+    arr : ndarray
+        the input array
+    patchSize : int
+        By default, the patchSize is 192.
+
+
+    Returns
+    -------
+    arr : ndarray
+        Rolling (block) view of the input array of N * patchSize * patchSize * 3
+
+    """
+    inputHeight, inputWidth = arr.shape[0], arr.shape[1]
+
+    #PAD HEIGHT AND WIDTH TO MULTIPLE OF PATCHSIZE
+    nearestHeight = 0 
+    nearestWidth = 0 
+    cnt = 0 
+    while nearestWidth < inputWidth:
+        nearestWidth = cnt * patchSize
+        cnt += 1 
+    cnt = 0 
+    while nearestHeight < inputHeight:
+        nearestHeight = cnt * patchSize
+        cnt += 1 
+    toPadX, toPadY = ((nearestWidth - inputWidth + patchSize)//2), (nearestHeight - inputHeight + patchSize//2)
+    arr = np.pad(arr, ((toPadY, toPadY),(toPadX, toPadX), (0,0)), 'edge')
+
+    arr = view_as_blocks(arr, (patchSize, patchSize, 3), step=patchSize)
+    arr = np.reshape(arr, (-1, patchSize, patchSize, 3))
+    # Variable "arr" are N * patchSize * patchSize * 3 patches with no overlap 
+    return arr
 
 def deconstruct(arr, patchSize=192):
     """
