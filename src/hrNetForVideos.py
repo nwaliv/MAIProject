@@ -1,6 +1,7 @@
 from src.auxFunctions import readFrames, deconstruct, reconstruct
 from src.rgb2yuv_yuv2rgb import RGB2YUV
-from src.yuv420 import writeYUV420
+from library.GeneralOps import writeYUV420
+#from src.yuv420 import writeYUV420
 import numpy as np
 import tensorflow as tf
 from library import hrNet
