@@ -38,20 +38,20 @@ class ProxyNetwork(keras.Model):
         self.dsConv2dLayersDeg = []
         for _filter in dsFilters:
             for _ in range(numCnnsBlock - 1):
-                self.dsConv2dLayersRef.append(cnnOpPaddedSpecNorm(_filter,3,paddingAmt=1))
-                self.dsConv2dLayersDeg.append(cnnOpPaddedSpecNorm(_filter,3,paddingAmt=1))
-            self.dsConv2dLayersRef.append(cnnOpPaddedSpecNorm(_filter,5, strides=2))
-            self.dsConv2dLayersDeg.append(cnnOpPaddedSpecNorm(_filter,5, strides=2))
+                self.dsConv2dLayersRef.append(cnnOpPaddedSpecNorm(_filter,3,paddingAmt=1,normalization=False))
+                self.dsConv2dLayersDeg.append(cnnOpPaddedSpecNorm(_filter,3,paddingAmt=1,normalization=False))
+            self.dsConv2dLayersRef.append(cnnOpPaddedSpecNorm(_filter,5, strides=2,normalization=False))
+            self.dsConv2dLayersDeg.append(cnnOpPaddedSpecNorm(_filter,5, strides=2,normalization=False))
         self.concatConv2dLayers = []
         for _filter in concatFilters:
             for _ in range(numCnnsConcat-1):
-                self.concatConv2dLayers.append(cnnOpPaddedSpecNorm(_filter, 3, paddingAmt=1))
-            self.concatConv2dLayers.append(cnnOpPaddedSpecNorm(_filter,5, strides=2))
+                self.concatConv2dLayers.append(cnnOpPaddedSpecNorm(_filter, 3, paddingAmt=1,normalization=False))
+            self.concatConv2dLayers.append(cnnOpPaddedSpecNorm(_filter,5, strides=2,normalization=False))
         self.flattenLayer = keras.layers.Flatten()
         self.denseLayers = []
         for _filter in denseUnits[:-1]:
             self.denseLayers.append(keras.layers.Dense(_filter, activation=tf.keras.layers.LeakyReLU(alpha=0.3)))
-        self.denseLayers.append(keras.layers.Dense(denseUnits[-1], activation='linear'))
+        self.denseLayers.append(keras.layers.Dense(denseUnits[-1], activation='tanh'))
 
     def call(self, xref, xdeg, training=False):
         for _layer in self.dsConv2dLayersRef:
@@ -64,6 +64,7 @@ class ProxyNetwork(keras.Model):
         x = self.flattenLayer(x, training=training)
         for _layer in self.denseLayers:
             x = _layer(x, training=training)
+        x = ((x + 1))*12.0
         return x
 
     def model(self):

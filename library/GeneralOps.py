@@ -10,6 +10,52 @@ def saveModel(folderName, model, arguments):
     with open(os.path.join(folderName, "arguments.json"), "w") as f:
         json.dump(arguments, f)
 
+def readYUV420RangePatches(name: str, resolution: tuple, frameRange: tuple, patchLoc: tuple, patchSize: tuple, upsampleUV: bool = False):
+    width = resolution[0]
+    height = resolution[1]
+    patchLoc_w = patchLoc[0]
+    patchLoc_h = patchLoc[1]
+    patchSize_w = patchSize[0]
+    patchSize_h = patchSize[1]
+    bytesY = int(height * width)
+    bytesUV = int(bytesY/4)
+    bytesYUV = bytesY + 2*bytesUV
+    Y = []
+    U = []
+    V = []
+    startLocation = frameRange[0]
+    endLocation = frameRange[1] + 1
+    for frameCnt in range(startLocation, endLocation, 1):
+        startLocationBytes = (frameCnt) * (bytesYUV)
+        YPatches = []
+        UPatches = []
+        VPatches = []
+        for _row in range(patchSize_h):
+            offSetBytesStartY = (patchLoc_h * width) + patchLoc_w + startLocationBytes + (_row*width)
+            offSetBytesEndY = offSetBytesStartY + patchSize_w
+            with open(name,"rb") as yuvFile:
+                YPatches.append(np.fromfile(yuvFile, np.uint8, offSetBytesEndY-offSetBytesStartY, offset=offSetBytesStartY).reshape(patchSize_w))
+        for _row in range(patchSize_h//2):
+            offSetBytesStartU = startLocationBytes + bytesY + (patchLoc_h//2 * width//2) +  patchLoc_w//2 + (_row*(width//2))
+            offSetBytesEndU = offSetBytesStartU + patchSize_w//2
+            offSetBytesStartV = startLocationBytes + bytesY + bytesUV + (patchLoc_h//2 * width//2) +  patchLoc_w//2 + (_row*(width//2))
+            offSetBytesEndV = offSetBytesStartV + patchSize_w//2
+            with open(name,"rb") as yuvFile:
+                UPatches.append(np.fromfile(yuvFile, np.uint8, offSetBytesEndU-offSetBytesStartU, offset=offSetBytesStartU).reshape(patchSize_w//2))
+            with open(name,"rb") as yuvFile:
+                VPatches.append(np.fromfile(yuvFile, np.uint8, offSetBytesEndV-offSetBytesStartV, offset=offSetBytesStartV).reshape(patchSize_w//2))
+        YPatches = np.reshape(np.concatenate(YPatches,0), (patchSize_w,patchSize_h))
+        UPatches = np.reshape(np.concatenate(UPatches,0), (patchSize_w//2,patchSize_h//2))
+        VPatches = np.reshape(np.concatenate(VPatches,0), (patchSize_w//2,patchSize_h//2))
+        Y.append(YPatches), U.append(UPatches), V.append(VPatches)
+    Y = np.stack(Y, 0)
+    U = np.stack(U, 0)
+    V = np.stack(V, 0)
+    if upsampleUV:
+        U = U.repeat(2, axis=1).repeat(2, axis=2)
+        V = V.repeat(2, axis=1).repeat(2, axis=2)
+    return Y, U, V
+
 def readYUV420(name: str, resolution: tuple, upsampleUV: bool = False):
     height = resolution[0]
     width = resolution[1]
@@ -91,6 +137,7 @@ def RGB2YUV(rgb):
     return yuv
 
 def RGB2YUV_TF(rgb):
+    rgb = rgb*255.0
     m = np.array([[ 0.29900, -0.16874,  0.50000],
                  [0.58700, -0.33126, -0.41869],
                  [ 0.11400, 0.50000, -0.08131]])
@@ -100,9 +147,19 @@ def RGB2YUV_TF(rgb):
     offset_c12 = tf.ones((tf.shape(yuv)[0], tf.shape(yuv)[1], tf.shape(yuv)[2], 2)) * 128.0
     offset = tf.concat([offset_c0, offset_c12], -1)
     yuv = yuv + offset
-    yuv = tf.clip_by_value(yuv,0,255)
+    yuv = tf.clip_by_value(yuv,0,255)/255.0
     return yuv
 
 # Function for running a command using the default user command line tool
 def runTerminalCmd(command):
     process = subprocess.run(command, shell=True)
+
+
+def upSample2XTile(x):
+    _shape = x.shape
+    y = np.empty((_shape[0], _shape[1]*2, _shape[2]*2, 3))
+    y[:,0:_shape[1],0:_shape[2],:] = x
+    y[:,_shape[1]:_shape[1]*2,0:_shape[2],:] = x
+    y[:,0:_shape[1],_shape[2]:_shape[2]*2,:] = x
+    y[:,_shape[1]:_shape[1]*2,_shape[2]:_shape[2]*2,:] = x
+    return y
