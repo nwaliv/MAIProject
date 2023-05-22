@@ -1,16 +1,16 @@
 from src.auxFunctions import readFrames, deconstruct, reconstruct
 from src.rgb2yuv_yuv2rgb import RGB2YUV
 from library.GeneralOps import writeYUV420
-#from src.yuv420 import writeYUV420
 import numpy as np
 import tensorflow as tf
 from library import hrNet
 
 class hrNetVideo:
-    def __init__(self, video_name: str, vidResolution: tuple, vidNumFrames: int):
+    def __init__(self, video_name: str, vidResolution: tuple, vidNumFrames: int, modelWeights: str):
         self.video_name = video_name
         self.vidResolution = vidResolution
         self.vidNumFrames = vidNumFrames
+        self.modelWeights = modelWeights
 
     def restore_frame(self, t: int):
 
@@ -21,8 +21,8 @@ class hrNetVideo:
         window_tplus1 = deconstruct(frame_tplus1,192)
 
         artifactReductionModel = hrNet(2, [32, 64, 128, 256], 5).model()
-        # Loads in the current weights, will be changed later after training on dataset
-        artifactReductionModel.load_weights('modelWeights/287_HRNET.h5')
+        # Loads in the current weights
+        artifactReductionModel.load_weights(self.modelWeights)
 
         inputPatches = np.concatenate((window_tmin1, window_t, window_tplus1), axis=-1)
         inputPatches = np.expand_dims(inputPatches, axis=0)
@@ -40,15 +40,17 @@ class hrNetVideo:
     def restore_video(self):
 
         artifactReductionModel = hrNet(2, [32, 64, 128, 256], 5).model()
-        # Loads in the current weights, will be changed later after training on dataset
-        artifactReductionModel.load_weights('modelWeights/287_HRNET.h5')
+        # Loads in the current weights
+        artifactReductionModel.load_weights(self.modelWeights)
 
         restoredY = np.empty((self.vidNumFrames,self.vidResolution[1],self.vidResolution[0]))
         restoredU = np.empty((self.vidNumFrames,self.vidResolution[1],self.vidResolution[0]))
         restoredV = np.empty((self.vidNumFrames,self.vidResolution[1],self.vidResolution[0]))
         restoredFrames = np.empty((self.vidNumFrames,self.vidResolution[1],self.vidResolution[0],3))
 
-        for frame in range(self.vidNumFrames):
+        #self.vidNumFrames
+        for frame in range(2):
+            print("Frame ", frame)
             frame_tmin1,frame_t,frame_tplus1 = readFrames(self.video_name,self.vidResolution,frame,self.vidNumFrames)
 
             window_tmin1 = deconstruct(frame_tmin1,192)
@@ -77,6 +79,6 @@ class hrNetVideo:
             restoredU[frame,:,:] = Uout
             restoredV[frame,:,:] = Vout
 
-        writeYUV420("output/restored_"+self.video_name,np.uint8(restoredY),np.uint8(restoredU),np.uint8(restoredV),downsample=True)
+        writeYUV420("output/"+ self.video_name[30:],np.uint8(restoredY),np.uint8(restoredU),np.uint8(restoredV),downsample=True)
 
         return restoredFrames

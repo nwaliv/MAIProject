@@ -10,6 +10,12 @@ def saveModel(folderName, model, arguments):
     with open(os.path.join(folderName, "arguments.json"), "w") as f:
         json.dump(arguments, f)
 
+def readYUV2RGB(name: str, resolution, scale=1.0):
+    Y, U, V = readYUV420(name, resolution, True)
+    YUV = np.stack([Y,U,V], -1)
+    RGB = YUV2RGB(YUV)/scale
+    return RGB
+
 def readYUV420RangePatches(name: str, resolution: tuple, frameRange: tuple, patchLoc: tuple, patchSize: tuple, upsampleUV: bool = False):
     width = resolution[0]
     height = resolution[1]

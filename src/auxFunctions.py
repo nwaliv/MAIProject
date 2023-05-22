@@ -27,50 +27,49 @@ def readFrames(vidName: str, resolution: tuple, t: int, numFrames: int):
         RGB arrays of the input frames
 
     """
-    inputVideo = 'dataset/' + vidName
 
     if t == 0:
-        Yarr, Uarr, Varr = readYUV420Range(inputVideo,resolution, (t,t), upsampleUV=True)
+        Yarr, Uarr, Varr = readYUV420Range(vidName,resolution, (t,t), upsampleUV=True)
         YUVarr = np.concatenate((Yarr,Uarr,Varr), axis=0)
         YUVarr = np.moveaxis(YUVarr,0,-1)
         RGBarr_tmin1 = YUV2RGB(YUVarr)
 
-        Yarr, Uarr, Varr = readYUV420Range(inputVideo,resolution, (t,t), upsampleUV=True)
+        Yarr, Uarr, Varr = readYUV420Range(vidName,resolution, (t,t), upsampleUV=True)
         YUVarr = np.concatenate((Yarr,Uarr,Varr), axis=0)
         YUVarr = np.moveaxis(YUVarr,0,-1)
         RGBarr_t = YUV2RGB(YUVarr)
 
-        Yarr, Uarr, Varr = readYUV420Range(inputVideo,resolution, (t+1,t+1), upsampleUV=True)
+        Yarr, Uarr, Varr = readYUV420Range(vidName,resolution, (t+1,t+1), upsampleUV=True)
         YUVarr = np.concatenate((Yarr,Uarr,Varr), axis=0)
         YUVarr = np.moveaxis(YUVarr,0,-1)
         RGBarr_tplus1 = YUV2RGB(YUVarr)
     elif t == numFrames - 1:
-        Yarr, Uarr, Varr = readYUV420Range(inputVideo,resolution, (t-1,t-1), upsampleUV=True)
+        Yarr, Uarr, Varr = readYUV420Range(vidName,resolution, (t-1,t-1), upsampleUV=True)
         YUVarr = np.concatenate((Yarr,Uarr,Varr), axis=0)
         YUVarr = np.moveaxis(YUVarr,0,-1)
         RGBarr_tmin1 = YUV2RGB(YUVarr)
 
-        Yarr, Uarr, Varr = readYUV420Range(inputVideo,resolution, (t,t), upsampleUV=True)
+        Yarr, Uarr, Varr = readYUV420Range(vidName,resolution, (t,t), upsampleUV=True)
         YUVarr = np.concatenate((Yarr,Uarr,Varr), axis=0)
         YUVarr = np.moveaxis(YUVarr,0,-1)
         RGBarr_t = YUV2RGB(YUVarr)
 
-        Yarr, Uarr, Varr = readYUV420Range(inputVideo,resolution, (t,t), upsampleUV=True)
+        Yarr, Uarr, Varr = readYUV420Range(vidName,resolution, (t,t), upsampleUV=True)
         YUVarr = np.concatenate((Yarr,Uarr,Varr), axis=0)
         YUVarr = np.moveaxis(YUVarr,0,-1)
         RGBarr_tplus1 = YUV2RGB(YUVarr)
     else:
-        Yarr, Uarr, Varr = readYUV420Range(inputVideo,resolution, (t-1,t-1), upsampleUV=True)
+        Yarr, Uarr, Varr = readYUV420Range(vidName,resolution, (t-1,t-1), upsampleUV=True)
         YUVarr = np.concatenate((Yarr,Uarr,Varr), axis=0)
         YUVarr = np.moveaxis(YUVarr,0,-1)
         RGBarr_tmin1 = YUV2RGB(YUVarr)
 
-        Yarr, Uarr, Varr = readYUV420Range(inputVideo,resolution, (t,t), upsampleUV=True)
+        Yarr, Uarr, Varr = readYUV420Range(vidName,resolution, (t,t), upsampleUV=True)
         YUVarr = np.concatenate((Yarr,Uarr,Varr), axis=0)
         YUVarr = np.moveaxis(YUVarr,0,-1)
         RGBarr_t = YUV2RGB(YUVarr)
 
-        Yarr, Uarr, Varr = readYUV420Range(inputVideo,resolution, (t+1,t+1), upsampleUV=True)
+        Yarr, Uarr, Varr = readYUV420Range(vidName,resolution, (t+1,t+1), upsampleUV=True)
         YUVarr = np.concatenate((Yarr,Uarr,Varr), axis=0)
         YUVarr = np.moveaxis(YUVarr,0,-1)
         RGBarr_tplus1 = YUV2RGB(YUVarr)
